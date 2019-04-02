@@ -32,6 +32,7 @@ fun main() {
     val fullscreenDir = rootPath.resolve("fullscreen").toFile()
     val creditsFile = rootPath.resolve("credits.png").toFile()
 
+    val maxClipFrames = 30 * 3
 
     FFmpegFrameRecorder(outputFile, outputRes.width, outputRes.height, 0).apply {
         frameRate = 30.0
@@ -45,7 +46,7 @@ fun main() {
         // Custom 6 second intro credits
         if (creditsFile.canRead()) {
             LOG.info { "FRAME $frameCount: clip into fullscreen" }
-            val images = Clip(creditsFile, outputRes, 90).toImages()
+            val images = Clip(creditsFile, outputRes, 30 * 5).toImages()
             while (images.hasNext()) {
                 drawFrame(fullscreen = images, frameDestination = ffr)
                 frameCount++
@@ -62,7 +63,7 @@ fun main() {
         clipsDir.walk()
                 .filter { it.isFile && it.canRead() && !it.isHidden }
                 .sortedBy { it.name }
-                .map { Clip(it, Dimension(outputRes.width / 2, outputRes.height), maxFrames = 30 * 4) }
+                .map { Clip(it, Dimension(outputRes.width / 2, outputRes.height), maxFrames = maxClipFrames) }
                 .forEach { nextClip ->
                     // While all slots are full AND have content, loop and render
                     while (leftSlot.hasNext() && rightSlot.hasNext()) {
@@ -94,7 +95,7 @@ fun main() {
         fullscreenDir.walk()
                 .filter { it.isFile && it.canRead() && !it.isHidden }
                 .sortedBy { it.name }
-                .map { Clip(it, outputRes, maxFrames = 30 * 100).toImages() }
+                .map { Clip(it, outputRes, maxFrames = 30 * 11).toImages() }
                 .forEach { images ->
                     LOG.info { "$frameCount clip into leftPortrait (as fullscreen)" }
                     while (images.hasNext()) {

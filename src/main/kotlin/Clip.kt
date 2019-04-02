@@ -3,6 +3,8 @@ import com.drew.metadata.exif.ExifSubIFDDirectory
 import com.google.common.primitives.Bytes
 import mu.KotlinLogging
 import net.coobird.thumbnailator.Thumbnails
+import net.coobird.thumbnailator.filters.Canvas
+import net.coobird.thumbnailator.geometry.Positions
 import org.bytedeco.javacv.FFmpegFrameGrabber
 import org.bytedeco.javacv.FrameConverter
 import org.bytedeco.javacv.Java2DFrameConverter
@@ -56,12 +58,21 @@ class Clip(private val file: File, private val maxRes: Dimension, private val ma
     private fun processStill(): Iterator<BufferedImage> = iterator {
         LOG.info { "Still: ${file.name}" }
         type += ".still"
-        var t = Thumbnails.of(file).size(maxRes.width, maxRes.height)
-        if (orientation != 0) {
-            t = t.rotate(orientation.toDouble())
+        val scaled =
+                Canvas(maxRes.width, maxRes.height, Positions.CENTER).apply(
+                        Thumbnails.of(file)
+                                .size(maxRes.width, maxRes.height)
+                                .asBufferedImage())
+
+        for (i in 0 until maxFrames) {
+            // not proportional :/
+            val trimmed = scaled.getSubimage(i, i, scaled.width - (2 * i), scaled.height - (2 * i))
+            var t = Thumbnails.of(trimmed).size(maxRes.width, maxRes.height)
+            if (orientation != 0) {
+                t = t.rotate(orientation.toDouble())
+            }
+            yield(t.asBufferedImage())
         }
-        val bi = t.asBufferedImage()!!
-        repeat(maxFrames) { yield(bi) }
     }
 
     private fun processMovie(): Iterator<BufferedImage> {
