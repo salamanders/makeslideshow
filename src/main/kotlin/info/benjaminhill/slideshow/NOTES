@@ -1,0 +1,93 @@
+TODO: stretch frames if not long enough.  Trim if too long
+    /**
+     * If a movie then direct to small images
+     * If an image then copy to maxFrames of images (maybe throw in some nice zoom)
+     * If a Live Motion or Motion Photo, extract the motion
+     * Resulting images should be oriented AND sized
+     */
+
+                val skip = max(0, g.lengthInVideoFrames - maxFrames)
+                LOG.info { "${file.name}: frames:${g.lengthInVideoFrames}, rotation:$orientation" }
+                if (skip > 0) {
+                    LOG.info { "${file.name} discarding first $skip of ${getNumberOfFrames()} frames." }
+                }
+
+                repeat(skip) {
+                    g.grabImage()
+                }
+
+   /** Do that gradual 50% zoom-to-center really smoothly */
+    private fun processStill(): Iterator<BufferedImage> = iterator {
+        LOG.info { "Still: ${file.name}" }
+        val src = ImageIO.read(file)!!
+
+        // Optimization for overly large images
+        /*
+        if (src.width > 2 * maxRes.width || src.height > 2 * maxRes.height) {
+            LOG.info { "Scaling down oversize image prior to zoom (${src.width}x${src.height}) " }
+            src = Thumbnails.of(src).size(maxRes.width * 2, maxRes.height * 2).asBufferedImage()
+        }
+         */
+
+        var lastScale = 0
+        for (frameIdx in 0 until maxFrames) {
+            val pct = frameIdx / (maxFrames * 10.0) // just 1/10th zoom
+            val scale = 1.0 + pct
+
+            val at = AffineTransform()
+            at.translate(src.width / 2.0, src.height / 2.0)
+            at.scale(scale, scale)
+            at.translate(-src.width / 2.0, -src.height / 2.0)
+            val ato = AffineTransformOp(at, RenderingHints(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC))
+            (scale * 100).roundToInt().let {
+                if (lastScale != it) {
+                    print("($frameIdx scale:$it)")
+                    lastScale = it
+                }
+            }
+
+        }
+    }
+
+
+fun compareMethodToExtractMotion() {
+    val target = "ftypmp42".toByteArray()
+
+    val largePhoto = File("/Users/benhill/Desktop/slideshow/clips/IMG_20191205_111240_MP.jpg")
+    val smallPhoto = File("/Users/benhill/Desktop/slideshow/clips/IMG_20191205_093400_MP.jpg")
+    listOf(largePhoto, smallPhoto).forEach { file->
+        val xmp: List<Map<String, String>> = ImageMetadataReader.readMetadata(file)
+                .directories
+                .filterIsInstance<XmpDirectory>()
+                .map {
+                    it.xmpProperties.entries.map { prop ->
+                        prop.key to prop.value
+                    }.toMap()
+                }
+        val mp4Directory = xmp.first {
+            it.values.contains("video/mp4")
+        }
+        val mp4KeyPrefix = mp4Directory.entries.first { it.value == "video/mp4" }.key.split("/")[0]
+        // println("Prefix: $mp4KeyPrefix")
+        val videoLength = mp4Directory.entries.first {
+            it.key.startsWith(mp4KeyPrefix) && it.key.endsWith("Length")
+        }.value.toInt()
+        val contents = file.readBytes()
+
+        val locationFromMetadata = contents.size - videoLength
+        val locationFromMarker = Bytes.indexOf(contents, target) - 4
+
+        println("Metadata: $locationFromMetadata, markerLocation:$locationFromMarker")
+        //println("contents.size:${contents.size}")
+        //println("Starting at ${contents.size-videoLength} until EOF.")
+
+        /*
+        contents.inputStream(contents.size-videoLength, videoLength).use { movieIs ->
+            File(file.nameWithoutExtension + ".mp4").outputStream().use {os->
+                movieIs.copyTo(os)
+            }
+        }
+
+         */
+    }
+}
