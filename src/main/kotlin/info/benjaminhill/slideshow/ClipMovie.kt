@@ -8,7 +8,8 @@ import java.awt.image.BufferedImage
 import java.io.File
 
 /**
- * With any FFmpegFrameGrabber (direct from file or parsed from Live/Motion Photo)
+ * With any FFmpegFrameGrabber (direct from file or parsed from Live/Motion Photo).
+ * Apple's Live Photos will already be split into standalone video files from Google Photos album download.
  */
 open class ClipMovie(file: File) : Clip(file) {
 

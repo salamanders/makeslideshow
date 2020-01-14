@@ -1,10 +1,4 @@
-TODO: stretch frames if not long enough.  Trim if too long
-    /**
-     * If a movie then direct to small images
-     * If an image then copy to maxFrames of images (maybe throw in some nice zoom)
-     * If a Live Motion or Motion Photo, extract the motion
-     * Resulting images should be oriented AND sized
-     */
+
 
                 val skip = max(0, g.lengthInVideoFrames - maxFrames)
                 LOG.info { "${file.name}: frames:${g.lengthInVideoFrames}, rotation:$orientation" }

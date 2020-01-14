@@ -8,7 +8,10 @@ import java.io.File
 import javax.imageio.ImageIO
 import javax.imageio.ImageReader
 
-/** StackOverflow's advice on how to read an animated GIF file */
+/**
+ * StackOverflow's advice on how to read an animated GIF file
+ * Ignores frame duration
+ */
 class ClipGif(file: File) : Clip(file) {
 
     private val reader: ImageReader by lazy {

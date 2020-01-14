@@ -1,6 +1,6 @@
 package info.benjaminhill.slideshow
 
-import mu.KotlinLogging
+import info.benjaminhill.util.removeOrNull
 import org.bytedeco.javacpp.avutil
 import org.bytedeco.javacv.FFmpegFrameRecorder
 import org.bytedeco.javacv.Java2DFrameConverter
@@ -52,7 +52,7 @@ class SlideShow(
             if (creditsFile.canRead()) {
                 LOG.debug { "FRAME $frameCount: clip into fullscreen" }
                 ClipStill(creditsFile)
-                        .getCorrectedFrames(frameLengthMin = minClipFrames, maxRes = outputRes)
+                        .getCorrectedFrames(maxRes = outputRes)
                         .forEach { frame ->
                             drawFullScreen(frame)
                             frameCount++
@@ -73,8 +73,8 @@ class SlideShow(
                     .forEach { halfScreenClip ->
                         // drop the halfScreenClip into the first free slot
                         when {
-                            leftSlot.isEmpty() -> leftSlot.addAll(halfScreenClip.getCorrectedFrames(minClipFrames, maxRes = halfSize))
-                            rightSlot.isEmpty() -> rightSlot.addAll(halfScreenClip.getCorrectedFrames(minClipFrames, maxRes = halfSize))
+                            leftSlot.isEmpty() -> leftSlot.addAll(halfScreenClip.getCorrectedFrames(maxRes = halfSize, frameLengthMin = minClipFrames))
+                            rightSlot.isEmpty() -> rightSlot.addAll(halfScreenClip.getCorrectedFrames(maxRes = halfSize, frameLengthMin = minClipFrames))
                             else -> LOG.warn { "Why were no slots empty?" }
                         }
                         halfScreenClipCount++
@@ -154,7 +154,6 @@ class SlideShow(
 
 
     companion object {
-        private val LOG = KotlinLogging.logger {}
         private val converter = Java2DFrameConverter()
     }
 

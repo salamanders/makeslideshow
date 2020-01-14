@@ -1,6 +1,9 @@
 package info.benjaminhill.slideshow
 
+import info.benjaminhill.util.BasicLogger
+
 const val FPS = 30
+val LOG = BasicLogger()
 
 /**
  * @author Benjamin Hill benjaminhill@gmail.com
@@ -13,14 +16,8 @@ const val FPS = 30
  * Also `mogrify -auto-orient -path ../rotated *.jpg` for the stills
  */
 fun main() {
+    LOG.level = BasicLogger.Companion.LEVEL.WARN
     val ss = SlideShow()
     ss.record()
 }
 
-internal fun <T : Any> MutableList<T>.removeOrNull(): T? {
-    return if (this.isNotEmpty()) {
-        this.removeAt(0)
-    } else {
-        null
-    }
-}

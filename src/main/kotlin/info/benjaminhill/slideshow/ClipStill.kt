@@ -6,9 +6,9 @@ import java.io.File
 import javax.imageio.ImageIO
 
 class ClipStill(file: File) : Clip(file) {
-    // TODO: maxRes: Dimension
+
     override fun getFrames() = sequence<Thumbnails.Builder<BufferedImage>> {
-        LOG.debug { "Still: ${file.name}" }
+        LOG.debug { "Still: ${file.name}, zooming over ${getNumberOfFrames()} frames." }
         val originalBi = ImageIO.read(file)!!
         val width = originalBi.width
         val widthPct = width * SCALE_PCT
@@ -16,6 +16,7 @@ class ClipStill(file: File) : Clip(file) {
         val heightPct = height * SCALE_PCT
 
         for (i in 0 until getNumberOfFrames()) {
+            // Gradual zoom towards center by trimming off the edges equally
             yield(Thumbnails.of(originalBi)
                     .sourceRegion(
                             (i * widthPct).toInt(), (i * heightPct).toInt(),
@@ -24,7 +25,8 @@ class ClipStill(file: File) : Clip(file) {
         }
     }
 
-    override fun getNumberOfFrames(): Int = 30
+    // Reasonable 2 second clip
+    override fun getNumberOfFrames(): Int = 60
 
     companion object {
         const val SCALE_PCT = 0.002

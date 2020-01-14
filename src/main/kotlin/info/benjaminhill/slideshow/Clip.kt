@@ -2,13 +2,15 @@ package info.benjaminhill.slideshow
 
 import com.drew.imaging.ImageMetadataReader
 import com.drew.metadata.exif.ExifSubIFDDirectory
-import mu.KotlinLogging
 import net.coobird.thumbnailator.Thumbnails
 import java.awt.Dimension
 import java.awt.image.BufferedImage
 import java.io.File
 import java.util.*
 
+/**
+ * Abstract media wrapper that produces frames that are correctly oriented.
+ */
 abstract class Clip(val file: File) : Comparable<Clip> {
 
     protected var orientation: Int
@@ -48,11 +50,13 @@ abstract class Clip(val file: File) : Comparable<Clip> {
     abstract fun getNumberOfFrames(): Int
 
     /** Repeat frames as necessary to reach the approx length */
-    fun getCorrectedFrames(
-            frameLengthMin: Int,
+    open fun getCorrectedFrames(
             maxRes: Dimension,
+            frameLengthMin: Int = getNumberOfFrames(),
             frameLengthMax: Int = 2 * frameLengthMin
     ): Sequence<BufferedImage> = sequence {
+
+        // Duplicate frames evenly to stretch out the video
         val duplicator = if (getNumberOfFrames() < frameLengthMin) {
             val duplicateCount = frameLengthMin / getNumberOfFrames()
             if (duplicateCount > 1 && getNumberOfFrames() > 1) {
@@ -62,11 +66,12 @@ abstract class Clip(val file: File) : Comparable<Clip> {
         } else {
             1
         }
+        // Frames to drop off the beginning if the clip is too long
         val trimFromBeginning = if (getNumberOfFrames() * duplicator > frameLengthMax) {
             val trim = (getNumberOfFrames() * duplicator) - frameLengthMax
             LOG.debug { "${file.name} trimming $trim frames from beginning of clip (after duplication)" }
             if (trim > frameLengthMax * 2) {
-                LOG.info { "${file.name} trimming more than 2x." }
+                LOG.info { "${file.name} trimming more than 2x ($trim of ${getNumberOfFrames()} removed from beginning, duplicator:$duplicator)" }
             }
             trim
         } else {
@@ -93,10 +98,5 @@ abstract class Clip(val file: File) : Comparable<Clip> {
         this.creationDate > other.creationDate -> 1
         else -> this.file.nameWithoutExtension.toLowerCase().compareTo(other.file.nameWithoutExtension.toLowerCase())
     }
-
-    companion object {
-        val LOG = KotlinLogging.logger {}
-    }
-
 
 }
