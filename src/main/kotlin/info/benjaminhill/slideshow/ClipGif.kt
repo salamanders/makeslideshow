@@ -7,11 +7,13 @@ import java.awt.image.BufferedImage
 import java.io.File
 import javax.imageio.ImageIO
 import javax.imageio.ImageReader
+import kotlin.time.ExperimentalTime
 
 /**
  * StackOverflow's advice on how to read an animated GIF file
  * Ignores frame duration
  */
+@ExperimentalTime
 class ClipGif(file: File) : Clip(file) {
 
     private val reader: ImageReader by lazy {

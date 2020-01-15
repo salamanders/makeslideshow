@@ -9,6 +9,7 @@ import java.awt.image.BufferedImage
 import java.io.File
 import java.nio.file.Path
 import java.nio.file.Paths
+import kotlin.time.ExperimentalTime
 
 /**
  *
@@ -20,6 +21,7 @@ import java.nio.file.Paths
  * @param creditsFile single image to use at the beginning
  * @param minClipFrames all videos and clips render at least this many frames
  */
+@ExperimentalTime
 class SlideShow(
         private val outputRes: Dimension = Dimension(1280, 720),
         private val rootPath: Path = Paths.get(System.getProperty("user.home"), "Desktop", "slideshow").also {
@@ -50,7 +52,7 @@ class SlideShow(
 
             // Custom X second intro credits
             if (creditsFile.canRead()) {
-                LOG.debug { "FRAME $frameCount: clip into fullscreen" }
+                LOG.fine { "FRAME $frameCount: clip into fullscreen" }
                 ClipStill(creditsFile)
                         .getCorrectedFrames(maxRes = outputRes)
                         .forEach { frame ->
@@ -58,7 +60,7 @@ class SlideShow(
                             frameCount++
                         }
             }
-            LOG.debug { "FRAME: $frameCount: Done with optional credits." }
+            LOG.fine { "FRAME: $frameCount: Done with optional credits." }
 
             // Empty lists are nice as fillers
             val leftSlot = mutableListOf<BufferedImage>()
@@ -75,7 +77,7 @@ class SlideShow(
                         when {
                             leftSlot.isEmpty() -> leftSlot.addAll(halfScreenClip.getCorrectedFrames(maxRes = halfSize, frameLengthMin = minClipFrames))
                             rightSlot.isEmpty() -> rightSlot.addAll(halfScreenClip.getCorrectedFrames(maxRes = halfSize, frameLengthMin = minClipFrames))
-                            else -> LOG.warn { "Why were no slots empty?" }
+                            else -> LOG.warning { "Why were no slots empty?" }
                         }
                         halfScreenClipCount++
 
@@ -85,12 +87,12 @@ class SlideShow(
                             frameCount++
                         }
                     }
-            LOG.debug { "FRAME: $frameCount: Finishing out left/right sides" }
+            LOG.fine { "FRAME: $frameCount: Finishing out left/right sides" }
             while (leftSlot.isNotEmpty() || rightSlot.isNotEmpty()) {
                 drawSideBySide(leftSlot.removeOrNull(), rightSlot.removeOrNull())
                 frameCount++
             }
-            LOG.debug { "FRAME: $frameCount: Done with $halfScreenClipCount half screen clips." }
+            LOG.fine { "FRAME: $frameCount: Done with $halfScreenClipCount half screen clips." }
 
             var fullScreenClipCount = 0
             fullscreenDir.walk()
@@ -98,7 +100,7 @@ class SlideShow(
                     .map { ClipFactory.fileToClip(it) }
                     .sorted()
                     .forEach { fullScreenClip ->
-                        LOG.debug { "$frameCount clip into leftPortrait (as fullscreen)" }
+                        LOG.fine { "$frameCount clip into leftPortrait (as fullscreen)" }
                         fullScreenClipCount++
                         fullScreenClip.getCorrectedFrames(
                                 frameLengthMin = minClipFrames,
@@ -109,7 +111,7 @@ class SlideShow(
                             frameCount++
                         }
                     }
-            LOG.debug { "FRAME: $frameCount: Done with $fullScreenClipCount full screen clips." }
+            LOG.fine { "FRAME: $frameCount: Done with $fullScreenClipCount full screen clips." }
 
             ffr.stop()
             LOG.info { "FRAME: $frameCount: done.  ${frameCount.toDouble() / (FPS * 60)}min." }
@@ -151,7 +153,6 @@ class SlideShow(
         }
         ffr.record(converter.convert(frame), avutil.AV_PIX_FMT_ARGB)
     }
-
 
     companion object {
         private val converter = Java2DFrameConverter()

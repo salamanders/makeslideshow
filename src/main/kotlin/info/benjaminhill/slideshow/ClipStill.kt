@@ -4,11 +4,13 @@ import net.coobird.thumbnailator.Thumbnails
 import java.awt.image.BufferedImage
 import java.io.File
 import javax.imageio.ImageIO
+import kotlin.time.ExperimentalTime
 
+@ExperimentalTime
 class ClipStill(file: File) : Clip(file) {
 
     override fun getFrames() = sequence<Thumbnails.Builder<BufferedImage>> {
-        LOG.debug { "Still: ${file.name}, zooming over ${getNumberOfFrames()} frames." }
+        LOG.fine { "Still: ${file.name}, zooming over ${getNumberOfFrames()} frames." }
         val originalBi = ImageIO.read(file)!!
         val width = originalBi.width
         val widthPct = width * SCALE_PCT

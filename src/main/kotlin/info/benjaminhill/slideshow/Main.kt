@@ -1,8 +1,10 @@
 package info.benjaminhill.slideshow
 
 import info.benjaminhill.util.BasicLogger
+import kotlin.time.ExperimentalTime
 
 const val FPS = 30
+@ExperimentalTime
 val LOG = BasicLogger()
 
 /**
@@ -15,8 +17,9 @@ val LOG = BasicLogger()
  * Great to use the mp4 videos that come from Live Motion
  * Also `mogrify -auto-orient -path ../rotated *.jpg` for the stills
  */
+@ExperimentalTime
 fun main() {
-    LOG.level = BasicLogger.Companion.LEVEL.WARN
+    // LOG.level = BasicLogger.Companion.LEVEL.INFO
     val ss = SlideShow()
     ss.record()
 }

@@ -7,10 +7,12 @@ import java.awt.Dimension
 import java.awt.image.BufferedImage
 import java.io.File
 import java.util.*
+import kotlin.time.ExperimentalTime
 
 /**
  * Abstract media wrapper that produces frames that are correctly oriented.
  */
+@ExperimentalTime
 abstract class Clip(val file: File) : Comparable<Clip> {
 
     protected var orientation: Int
@@ -60,7 +62,7 @@ abstract class Clip(val file: File) : Comparable<Clip> {
         val duplicator = if (getNumberOfFrames() < frameLengthMin) {
             val duplicateCount = frameLengthMin / getNumberOfFrames()
             if (duplicateCount > 1 && getNumberOfFrames() > 1) {
-                LOG.debug { "${file.name} stretching clip by ${duplicateCount}x" }
+                LOG.fine { "${file.name} stretching clip by ${duplicateCount}x" }
             }
             duplicateCount
         } else {
@@ -69,7 +71,7 @@ abstract class Clip(val file: File) : Comparable<Clip> {
         // Frames to drop off the beginning if the clip is too long
         val trimFromBeginning = if (getNumberOfFrames() * duplicator > frameLengthMax) {
             val trim = (getNumberOfFrames() * duplicator) - frameLengthMax
-            LOG.debug { "${file.name} trimming $trim frames from beginning of clip (after duplication)" }
+            LOG.fine { "${file.name} trimming $trim frames from beginning of clip (after duplication)" }
             if (trim > frameLengthMax * 2) {
                 LOG.info { "${file.name} trimming more than 2x ($trim of ${getNumberOfFrames()} removed from beginning, duplicator:$duplicator)" }
             }

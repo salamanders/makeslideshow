@@ -1,43 +1,44 @@
 package info.benjaminhill.util
 
 import java.lang.management.ManagementFactory
+import kotlin.time.DurationUnit
+import kotlin.time.ExperimentalTime
+import kotlin.time.toDuration
 
 
+@ExperimentalTime
 class BasicLogger {
-    var level = LEVEL.DEBUG
+    var level = LEVEL.CONFIG
     private val jvmStartTime = ManagementFactory.getRuntimeMXBean().startTime
-    private fun ts() = String.format("%09d", System.currentTimeMillis() - jvmStartTime)
 
-    fun debug(message: () -> String) {
-        if (level <= LEVEL.DEBUG) {
-            println("${ts()} DEBUG: ${message()}")
+    private fun ts() = (System.currentTimeMillis() - jvmStartTime).toDuration(DurationUnit.MILLISECONDS).toString()
+
+    fun log(message: () -> String, thisMessageLevel: LEVEL) = when (thisMessageLevel) {
+        !in level..LEVEL.SEVERE -> {
+            // discard
         }
+        in LEVEL.FINEST..LEVEL.INFO -> println("${ts()} $thisMessageLevel: ${message()}")
+        else -> System.err.println("${ts()} $thisMessageLevel: ${message()}")
     }
 
-    fun info(message: () -> String) {
-        if (level <= LEVEL.INFO) {
-            println("${ts()}  INFO: ${message()}")
-        }
-    }
-
-    fun warn(message: () -> String) {
-        if (level <= LEVEL.WARN) {
-            System.err.println("${ts()}  WARN: ${message()}")
-        }
-    }
-
-    fun error(message: () -> String) {
-        if (level <= LEVEL.ERROR) {
-            System.err.println("${ts()} ERROR: ${message()}")
-        }
-    }
+    fun finest(message: () -> String) = this.log(message, LEVEL.FINEST)
+    fun finer(message: () -> String) = this.log(message, LEVEL.FINER)
+    fun fine(message: () -> String) = this.log(message, LEVEL.FINE)
+    fun config(message: () -> String) = this.log(message, LEVEL.CONFIG)
+    fun info(message: () -> String) = this.log(message, LEVEL.INFO)
+    fun warning(message: () -> String) = this.log(message, LEVEL.WARNING)
+    fun severe(message: () -> String) = this.log(message, LEVEL.SEVERE)
 
     companion object {
         enum class LEVEL {
-            DEBUG,
+            ALL,
+            FINEST,
+            FINER,
+            FINE,
+            CONFIG,
             INFO,
-            WARN,
-            ERROR
+            WARNING,
+            SEVERE
         }
     }
 }
